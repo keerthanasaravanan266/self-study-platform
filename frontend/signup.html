@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Self Study - Sign Up</title>
+
+<style>
+body{
+margin:0;
+font-family:'Poppins', sans-serif;
+background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:white;
+}
+
+.container{
+display:flex;
+justify-content:center;
+align-items:center;
+height:90vh;
+}
+
+.signup-box{
+background:white;
+color:black;
+padding:50px;
+width:420px;
+border-radius:15px;
+box-shadow:0 20px 50px rgba(0,0,0,0.4);
+text-align:center;
+}
+
+.signup-box h2{
+color:#2c5364;
+margin-bottom:30px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin-bottom:20px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#2c5364;
+color:white;
+border:none;
+border-radius:8px;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1c3945;
+}
+</style>
+
+<script>
+function createAccount(){
+let username=document.getElementById("username").value;
+let password=document.getElementById("password").value;
+
+if(username===""||password===""){
+alert("Please fill all fields");
+return;
+}
+
+let userData={
+username:username,
+password:password
+};
+
+localStorage.setItem(username,JSON.stringify(userData));
+
+alert("Account created successfully!");
+window.location.href="login.html";
+}
+</script>
+</head>
+
+<body>
+
+<div class="container">
+<div class="signup-box">
+<h2>Create Account</h2>
+
+<input type="text" id="username" placeholder="Choose Username">
+<input type="password" id="password" placeholder="Create Password">
+
+<button onclick="createAccount()">Sign Up</button>
+
+</div>
+</div>
+
+</body>
+</html>

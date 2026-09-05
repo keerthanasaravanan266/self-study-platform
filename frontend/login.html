@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Self Study</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    background:#3f5d8a;
+}
+
+/* ================= HEADER ================= */
+header{
+    background:#e9ecef;
+    text-align:center;
+    padding:15px 0;
+    position:relative;
+}
+
+header h1{
+    color:#2d4a7c;
+    margin-bottom:10px;
+}
+
+nav{
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    position:relative;
+}
+
+nav a{
+    text-decoration:none;
+    color:#2d4a7c;
+    font-weight:500;
+    padding:10px;
+    position:relative;
+}
+
+/* ================= MEGA MENU ================= */
+.mega{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    top:100%;
+    background:#f4f4f4;
+    width:600px;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    display:none;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    z-index:100;
+}
+
+nav li{
+    list-style:none;
+    position:relative;
+}
+
+nav li:hover .mega{
+    display:grid;
+}
+
+.mega h4{
+    color:#2d4a7c;
+    margin-bottom:5px;
+}
+
+.mega p{
+    font-size:14px;
+}
+
+/* ================= LOGIN BOX ================= */
+.main{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:70vh;
+}
+
+.box{
+    background:#f4f4f4;
+    padding:40px;
+    width:400px;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+.box h2{
+    margin-bottom:25px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin:15px 0;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    background:#2d4a7c;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    background:#1f3558;
+}
+
+.link{
+    margin-top:15px;
+    font-size:14px;
+}
+
+.link span{
+    color:#2d4a7c;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.error{
+    color:red;
+    margin-top:10px;
+}
+
+.success{
+    color:green;
+    margin-top:10px;
+}
+
+/* ================= FOOTER ================= */
+footer{
+    background:#23395d;
+    color:white;
+    text-align:center;
+    padding:30px 0;
+    margin-top:40px;
+}
+
+footer hr{
+    width:80%;
+    margin:15px auto;
+    border:0.5px solid #ccc;
+}
+
+.title-container{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+}
+
+.logo{
+    width:45px;
+    height:45px;
+    object-fit:contain;
+}
+
+#resourceContent{
+display:none;
+padding:40px;
+background:#f4f4f4;
+margin:40px auto;
+width:80%;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+.contentSection{
+font-size:16px;
+line-height:1.6;
+}
+</style>
+<script src="config.js"></script>
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+
+<div class="title-container">
+    <img src="logo.jpeg" alt="Logo" class="logo">
+    <h1>Self Study</h1>
+</div>
+
+<nav>
+
+<li>
+<a href="#">About</a>
+<div class="mega">
+<div>
+<h4>AI Powered Learning</h4>
+<p>Upload materials and get summaries, quizzes and insights instantly.</p>
+</div>
+
+<div>
+<h4>Smart Study Tools</h4>
+<p>Chat assistant, summarizer, quiz generator & analytics.</p>
+</div>
+
+<div>
+<h4>Assignment & Grade Tracker</h4>
+<p>Track grades and monitor improvement.</p>
+</div>
+
+<div>
+<h4>Progress Visualization</h4>
+<p>Performance graphs and statistics.</p>
+</div>
+
+</div>
+</li>
+
+<li>
+<a href="#">Features</a>
+<div class="mega">
+
+<div>
+<h4>Upload Materials</h4>
+<p>PDF, DOC, audio, links and videos.</p>
+</div>
+
+<div>
+<h4>Chat Assistant</h4>
+<p>Clarify doubts instantly.</p>
+</div>
+
+<div>
+<h4>Summarizer</h4>
+<p>Generate quick notes.</p>
+</div>
+
+<div>
+<h4>Quiz Generator</h4>
+<p>Create practice tests.</p>
+</div>
+
+<div>
+<h4>Timetable</h4>
+<p>Manage schedule smartly.</p>
+</div>
+
+<div>
+<h4>Assignment Tracker</h4>
+<p>Deadline reminders.</p>
+</div>
+
+</div>
+</li>
+
+<li>
+<a href="#">Resources</a>
+
+<div class="mega resources-menu">
+
+<a href="#" onclick="showSection('faq')">FAQ</a>
+
+<a href="#" onclick="showSection('guidelines')">Guidelines</a>
+
+<a href="#" onclick="showSection('contact')">Contact</a>
+
+<a href="#" onclick="showSection('support')">Support</a>
+
+</div>
+
+</li>
+
+</nav>
+
+</header>
+<!-- ================= LOGIN SECTION ================= -->
+<div class="main">
+
+    <!-- LOGIN BOX -->
+    <div class="box" id="loginBox">
+        <h2>Login</h2>
+        <input type="text" id="loginUser" placeholder="Enter username">
+        <input type="password" id="loginPass" placeholder="Enter password">
+        <button onclick="login()">Login</button>
+
+        <div class="link">
+            Don't have an account?
+            <span onclick="showSignup()">Sign Up</span>
+        </div>
+
+        <div id="loginMessage"></div>
+    </div>
+
+    <!-- SIGNUP BOX -->
+    <div class="box" id="signupBox" style="display:none;">
+        <h2>Sign Up</h2>
+        <input type="text" id="signupUser" placeholder="Create username">
+        <input type="password" id="signupPass" placeholder="Create password">
+        <input type="email" id="signupEmail" placeholder="Enter email">
+        <button onclick="signup()">Sign Up</button>
+
+        <div class="link">
+            Already have an account?
+            <span onclick="showLogin()">Login</span>
+        </div>
+
+        <div id="signupMessage"></div>
+    </div>
+
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+    <hr>
+    <p>By signing in, you agree to our Terms and Privacy Policy.</p>
+    <p>© 2026 Self Study. All rights reserved.</p>
+</footer>
+
+<div id="resourceContent">
+
+<div id="faq" class="contentSection" style="display:none;">
+<h2>Frequently Asked Questions</h2>
+
+<p><b>1. How do I upload materials?</b><br>
+You can upload PDFs, DOC files, audio and video from dashboard.</p>
+
+<p><b>2. Is Self Study free?</b><br>
+Yes, basic features are free for students.</p>
+
+<p><b>3. Can I track my progress?</b><br>
+Yes, progress graphs are available in your dashboard.</p>
+
+</div>
+
+
+<div id="guidelines" class="contentSection" style="display:none;">
+<h2>Guidelines</h2>
+
+<ul>
+<li>Use appropriate study materials</li>
+<li>Do not upload copyrighted content</li>
+<li>Keep your login credentials secure</li>
+<li>Respect platform policies</li>
+</ul>
+
+</div>
+
+
+<div id="contact" class="contentSection" style="display:none;">
+<h2>Contact</h2>
+
+<p>Email: support@selfstudy.com</p>
+<p>Phone: +91 9876543210</p>
+<p>Location: Chennai, India</p>
+
+</div>
+
+
+<div id="support" class="contentSection" style="display:none;">
+<h2>Support</h2>
+
+<p>For technical help, contact support team.</p>
+<p>Response time: 24 hours</p>
+
+</div>
+
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+
+console.log("Script loaded");
+
+/* Switch Between Login & Signup */
+function showSignup(){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("signupBox").style.display="block";
+    clearMsg();
+}
+
+function showLogin(){
+    document.getElementById("signupBox").style.display="none";
+    document.getElementById("loginBox").style.display="block";
+    clearMsg();
+}
+
+function clearMsg(){
+    document.getElementById("loginMessage").innerHTML="";
+    document.getElementById("signupMessage").innerHTML="";
+}
+
+function showSection(sectionId){
+
+document.getElementById("resourceContent").style.display="block";
+
+let sections = document.getElementsByClassName("contentSection");
+
+for(let i=0;i<sections.length;i++){
+sections[i].style.display="none";
+}
+
+document.getElementById(sectionId).style.display="block";
+
+window.scrollTo({
+top: document.getElementById("resourceContent").offsetTop,
+behavior: "smooth"
+});
+
+}
+
+function signup(){
+
+    let username = document.getElementById("signupUser").value.trim();
+    let password = document.getElementById("signupPass").value.trim();
+    let email = document.getElementById("signupEmail").value.trim();
+
+    if(username === "" || password === "" || email === ""){
+        document.getElementById("signupMessage").innerHTML =
+            "<div class='error'>Please fill all fields</div>";
+        return;
+    }
+
+    fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password,
+            email: email
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("signupMessage").innerHTML =
+            "<div class='success'>" + data.message + "</div>";
+        setTimeout(showLogin, 1500);
+    });
+}
+
+function login(){
+
+    let username = document.getElementById("loginUser").value.trim();
+    let password = document.getElementById("loginPass").value.trim();
+
+    fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    })
+    .then(async res => {
+        const data = await res.json();
+
+        if(res.ok){
+            sessionStorage.setItem("userId", data.user.id);
+            sessionStorage.setItem("email", data.user.email);
+            window.location.href = "index.html";
+        } else {
+            document.getElementById("loginMessage").innerHTML =
+                "<div class='error'>" + data.message + "</div>";
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        document.getElementById("loginMessage").innerHTML =
+            "<div class='error'>Server not reachable</div>";
+    });
+}
+
+</script>
+
+</body>
+</html>

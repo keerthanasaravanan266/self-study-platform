@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI Smart Quiz - Self Study</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+.quiz-card {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 40px;
+    text-align: center;
+}
+
+.quiz-card textarea {
+    width: 100%;
+    height: 120px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 15px;
+}
+
+.quiz-card input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 10px;
+}
+
+.quiz-card button {
+    margin-top: 15px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+}
+
+.quiz-card button:hover {
+    background: #1d4ed8;
+}
+
+.quiz-card .controls-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.quiz-card select {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+.action-row {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.secondary-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background: #6b7280;
+    color: white;
+    cursor: pointer;
+}
+
+.secondary-btn:hover {
+    background: #4b5563;
+}
+
+.placeholder-text {
+    opacity: 0.7;
+    margin-top: 20px;
+}
+
+/* ---- Interactive question cards ---- */
+
+#quizOutput {
+    text-align: left;
+    margin-top: 25px;
+}
+
+.score-banner {
+    background: rgba(255,255,255,0.08);
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.question-card {
+    background: rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+
+.question-card .q-text {
+    font-weight: 600;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.option-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.option-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.12);
+}
+
+.option-btn:disabled {
+    cursor: default;
+}
+
+.option-btn.correct {
+    background: rgba(34,197,94,0.35);
+    border-color: #22c55e;
+}
+
+.option-btn.incorrect {
+    background: rgba(220,38,38,0.35);
+    border-color: #dc2626;
+}
+
+.feedback-text {
+    margin-top: 8px;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+</style>
+<script src="config.js"></script>
+</head>
+
+<body>
+
+<!-- 🔐 Protect Page -->
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="sidebar">
+    <div>
+        <div class="sidebar-header">
+    <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+    <h2>HOME</h2>
+</div>
+
+        <ul>
+            <li onclick="location.href='materials.html'">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+            <li onclick="location.href='summariser.html'">AI Summariser</li>
+            <li class="active">AI Smart Quiz</li>
+            <li onclick="location.href='timetable.html'">Timetable</li>
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li onclick="location.href='grades.html'">Grades</li>
+            <li onclick="location.href='progress.html'">Progress Tracker</li>
+        </ul>
+    </div>
+
+    <div class="logout" onclick="logout()">Logout</div>
+</div>
+
+<div class="main">
+
+    <!-- Header -->
+    <div class="header">
+        <div style="display:flex;align-items:center;">
+            <img src="logo.jpeg" class="logo">
+            <h1>Self Study</h1>
+        </div>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="quiz-card">
+
+        <h2>AI Smart Quiz Generator</h2>
+
+        <p>This quiz remembers you. Questions you get wrong come back sooner; ones you know well show up less often - so quizzing the same topic over time actually builds on itself instead of starting from scratch.</p>
+
+        <input type="text" id="topicInput" placeholder="Topic / subject (e.g. Robotics, DBMS Unit 2) - used to track your progress on this topic">
+
+        <textarea id="materialInput" placeholder="Paste study material, or just describe a topic..."></textarea>
+
+        <div class="controls-row">
+            <label for="questionCount">Number of questions:</label>
+            <select id="questionCount">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+            </select>
+        </div>
+
+        <div class="action-row">
+            <button onclick="generateQuiz()">Generate Quiz</button>
+            <button class="secondary-btn" onclick="reviewDue()">Review Due Questions Only</button>
+        </div>
+
+        <div id="quizOutput" class="placeholder-text">
+            Quiz questions will appear here.
+        </div>
+
+        <div class="action-row" id="downloadRow" style="display:none;">
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script>
+
+let currentQuestions = [];       // [{id, question, options:{A,B,C,D}}]
+let answeredState = {};          // questionId -> { selected, correct, correctOption }
+
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href = "login.html";
+}
+function goDashboard(){
+    window.location.href = "index.html";
+}
+
+function escapeHtml(str){
+    return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function generateQuiz(){
+
+    const topic = document.getElementById("topicInput").value.trim();
+    const text = document.getElementById("materialInput").value.trim();
+    const count = document.getElementById("questionCount").value;
+    const output = document.getElementById("quizOutput");
+
+    if(!text){
+        alert("Please enter or paste some study material / describe the topic.");
+        return;
+    }
+
+    output.innerHTML = "Generating quiz...";
+    document.getElementById("downloadRow").style.display = "none";
+
+    fetch(`${API_BASE}/api/quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId: sessionStorage.getItem("userId"),
+            topic,
+            text,
+            count
+        })
+    })
+    .then(res => res.json())
+    .then(data => renderQuizResponse(data))
+    .catch(err => {
+        console.error(err);
+        output.innerHTML = "Error generating quiz.";
+    });
+}
+
+function reviewDue(){
+
+    const topic = document.getElementById("topicInput").value.trim();
+    const output = document.getElementById("quizOutput");
+
+    if(!topic){
+        alert("Enter a topic name above first, so I know which review queue to check.");
+        return;
+    }
+
+    output.innerHTML = "Checking what's due for review...";
+    document.getElementById("downloadRow").style.display = "none";
+
+    fetch(`${API_BASE}/api/quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId: sessionStorage.getItem("userId"),
+            topic,
+            reviewOnly: true
+        })
+    })
+    .then(res => res.json())
+    .then(data => renderQuizResponse(data))
+    .catch(err => {
+        console.error(err);
+        output.innerHTML = "Error checking review queue.";
+    });
+}
+
+function renderQuizResponse(data){
+    const output = document.getElementById("quizOutput");
+
+    if(!data.questions || data.questions.length === 0){
+        output.innerHTML = `<p class="placeholder-text">${escapeHtml(data.quiz || "No questions available.")}</p>`;
+        document.getElementById("downloadRow").style.display = "none";
+        return;
+    }
+
+    currentQuestions = data.questions;
+    answeredState = {};
+
+    let noteHtml = "";
+    if(typeof data.dueCount === "number" && data.dueCount > 0){
+        noteHtml = `<p class="placeholder-text" style="margin-top:0;">Includes ${data.dueCount} question(s) due for review${data.newCount ? ` + ${data.newCount} new` : ""}.</p>`;
+    }
+
+    output.innerHTML = `
+        <div class="score-banner" id="scoreBanner">Score: 0 / ${currentQuestions.length}</div>
+        ${noteHtml}
+        <div id="questionsList"></div>
+    `;
+
+    const list = document.getElementById("questionsList");
+    currentQuestions.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "question-card";
+        card.id = `q-card-${q.id}`;
+        card.innerHTML = `
+            <div class="q-text">${idx + 1}. ${escapeHtml(q.question)}</div>
+            <div class="options" id="options-${q.id}">
+                ${["A","B","C","D"].map(letter => `
+                    <button class="option-btn" onclick="submitAnswer('${q.id}','${letter}')">
+                        ${letter}. ${escapeHtml(q.options[letter])}
+                    </button>
+                `).join("")}
+            </div>
+            <div class="feedback-text" id="feedback-${q.id}"></div>
+        `;
+        list.appendChild(card);
+    });
+
+    document.getElementById("downloadRow").style.display = "flex";
+}
+
+function submitAnswer(questionId, selectedLetter){
+
+    // Prevent double-answering
+    if(answeredState[questionId]) return;
+
+    fetch(`${API_BASE}/api/quiz/answer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questionId, selectedOption: selectedLetter })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if(result.message && result.correct === undefined){
+            // Locally-generated question (not tracked in DB) - just show correctness client-side isn't possible,
+            // but this only happens if userId was missing at generation time.
+            document.getElementById(`feedback-${questionId}`).textContent = result.message;
+            return;
+        }
+
+        answeredState[questionId] = {
+            selected: selectedLetter,
+            correct: result.correct,
+            correctOption: result.correctOption
+        };
+
+        const optionButtons = document.querySelectorAll(`#options-${questionId} .option-btn`);
+        optionButtons.forEach(btn => {
+            btn.disabled = true;
+            const letter = btn.textContent.trim().charAt(0);
+            if(letter === result.correctOption){
+                btn.classList.add("correct");
+            } else if(letter === selectedLetter && !result.correct){
+                btn.classList.add("incorrect");
+            }
+        });
+
+        const feedback = document.getElementById(`feedback-${questionId}`);
+        feedback.textContent = result.correct
+            ? "✅ Correct! This will come back less often from now on."
+            : `❌ Not quite - the correct answer is ${result.correctOption}. This will come back for review soon.`;
+
+        updateScore();
+    })
+    .catch(err => console.error(err));
+}
+
+function updateScore(){
+    const answered = Object.values(answeredState);
+    const correct = answered.filter(a => a.correct).length;
+    const banner = document.getElementById("scoreBanner");
+    if(banner){
+        banner.textContent = `Score: ${correct} / ${currentQuestions.length} (${answered.length} answered)`;
+    }
+}
+
+function downloadQuiz(){
+    if(currentQuestions.length === 0) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const marginLeft = 40;
+    const maxWidth = 515;
+    const lineHeight = 16;
+    const pageHeight = doc.internal.pageSize.height;
+    let y = 50;
+
+    doc.setFontSize(16);
+    doc.text("Smart Quiz", marginLeft, y);
+    y += 25;
+    doc.setFontSize(11);
+
+    function addLine(text){
+        const lines = doc.splitTextToSize(text, maxWidth);
+        lines.forEach(line => {
+            if (y > pageHeight - 40) {
+                doc.addPage();
+                y = 40;
+            }
+            doc.text(line, marginLeft, y);
+            y += lineHeight;
+        });
+    }
+
+    currentQuestions.forEach((q, idx) => {
+        addLine(`${idx + 1}. ${q.question}`);
+        ["A","B","C","D"].forEach(letter => addLine(`   ${letter}. ${q.options[letter]}`));
+        const state = answeredState[q.id];
+        if(state){
+            addLine(`   Answer: ${state.correctOption}${state.correct ? " (you got this right)" : ` (you answered ${state.selected})`}`);
+        }
+        y += 6;
+    });
+
+    doc.save("quiz.pdf");
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Materials - Self Study</title>
+    <link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+
+<style>
+
+.category-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.category-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.category-tab:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.category-tab.active {
+    background: #2563eb;
+}
+
+.category-group {
+    margin-bottom: 30px;
+}
+
+.category-group h2.category-name {
+    font-size: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.empty-note {
+    opacity: 0.6;
+    font-size: 14px;
+}
+
+</style>
+
+</head>
+<body onload="loadAllMaterials()">
+
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+</script>
+
+
+<div class="sidebar">
+    <div>
+        <div class="sidebar-header">
+    <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+    <h2>HOME</h2>
+</div>
+
+        <ul>
+            <li class="active">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+<li onclick="location.href='summariser.html'">AI Summariser</li>
+<li onclick="location.href='smartquiz.html'">AI Smart Quiz</li>
+<li onclick="location.href='timetable.html'">Timetable</li>
+
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li onclick="location.href='grades.html'">Grades</li>
+            <li onclick="location.href='progress.html'">Progress Tracker</li>
+        </ul>
+    </div>
+
+    <div class="logout" onclick="logout()">Logout</div>
+
+</div>
+
+<div class="main">
+    <div class="header">
+        <div style="display:flex;align-items:center;">
+            <img src="logo.jpeg">
+            <h1>Self Study</h1>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h2>My Materials</h2>
+        <p style="opacity:0.7;font-size:14px;">Filter by category, or view everything at once.</p>
+
+        <div class="category-tabs" id="categoryTabs"></div>
+
+        <div id="materialsContainer"></div>
+    </div>
+</div>
+
+
+<script>
+
+let allDocMaterials = [];   // uploaded files/links (from /api/materials/:userId)
+let allPastedMaterials = []; // pasted text/website/links (from /api/materials/pasted/:userId)
+let activeCategory = "All";
+
+function goDashboard(){
+    window.location.href = "index.html";
+}
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href = "login.html";
+}
+
+async function loadAllMaterials(){
+
+    const userId = sessionStorage.getItem("userId");
+    if(!userId) return;
+
+    try {
+        const [docsRes, pastedRes] = await Promise.all([
+            fetch(`${API_BASE}/api/materials/${userId}`).then(r => r.json()),
+            fetch(`${API_BASE}/api/materials/pasted/${userId}`).then(r => r.json())
+        ]);
+
+        allDocMaterials = Array.isArray(docsRes) ? docsRes : [];
+        allPastedMaterials = Array.isArray(pastedRes) ? pastedRes : [];
+
+        renderCategoryTabs();
+        renderMaterials();
+
+    } catch (err) {
+        console.error("Failed to load materials:", err);
+    }
+}
+
+function getCategories(){
+    const cats = new Set();
+    allDocMaterials.forEach(m => cats.add(m.category || "Uncategorized"));
+    allPastedMaterials.forEach(m => cats.add(m.category || "Uncategorized"));
+    return [...cats].sort((a, b) => a.localeCompare(b));
+}
+
+function renderCategoryTabs(){
+    const container = document.getElementById("categoryTabs");
+    const categories = ["All", ...getCategories()];
+
+    container.innerHTML = "";
+    categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "category-tab" + (cat === activeCategory ? " active" : "");
+        btn.textContent = cat;
+        btn.onclick = () => {
+            activeCategory = cat;
+            renderCategoryTabs();
+            renderMaterials();
+        };
+        container.appendChild(btn);
+    });
+}
+
+function escapeHtml(str){
+    return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function renderMaterials(){
+
+    const container = document.getElementById("materialsContainer");
+    const categories = activeCategory === "All" ? getCategories() : [activeCategory];
+
+    if(allDocMaterials.length === 0 && allPastedMaterials.length === 0){
+        container.innerHTML = `<p class="empty-note">Nothing uploaded yet. Add files, links, or pasted notes from the Home page.</p>`;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    categories.forEach(category => {
+
+        const docs = allDocMaterials.filter(m => (m.category || "Uncategorized") === category);
+        const pasted = allPastedMaterials.filter(m => (m.category || "Uncategorized") === category);
+
+        if(docs.length === 0 && pasted.length === 0) return;
+
+        const documents = docs.filter(m => m.type === "Document");
+        const links = docs.filter(m => m.type === "Link");
+        const media = docs.filter(m => m.type === "Media");
+
+        const texts = pasted.filter(m => m.type === "Text");
+        const websites = pasted.filter(m => m.type === "Website");
+        const plinks = pasted.filter(m => m.type === "Link");
+
+        let html = `<div class="category-group"><h2 class="category-name">${escapeHtml(category)}</h2>`;
+
+        if(documents.length){
+            html += `<h3>Documents</h3>`;
+            documents.forEach(item => {
+                html += `<p>📄 <a href="${item.file_path}" target="_blank">${escapeHtml(item.title)}</a></p>`;
+            });
+        }
+
+        if(links.length){
+            html += `<h3>Links</h3>`;
+            links.forEach(item => {
+                html += `<p><a href="${item.title}" target="_blank">${escapeHtml(item.title)}</a></p>`;
+            });
+        }
+
+        if(media.length){
+            html += `<h3>Audio/Video</h3>`;
+            media.forEach(item => {
+                html += `<p>🎥 <a href="${item.file_path}" target="_blank">${escapeHtml(item.title)}</a></p>`;
+            });
+        }
+
+        if(texts.length){
+            html += `<h3>Pasted Text</h3>`;
+            texts.forEach(item => {
+                html += `<p>${escapeHtml(item.content)}</p>`;
+            });
+        }
+
+        if(websites.length){
+            html += `<h3>Pasted Websites</h3>`;
+            websites.forEach(item => {
+                html += `<p><a href="${item.content}" target="_blank">${escapeHtml(item.content)}</a></p>`;
+            });
+        }
+
+        if(plinks.length){
+            html += `<h3>Pasted Links</h3>`;
+            plinks.forEach(item => {
+                html += `<p><a href="${item.content}" target="_blank">${escapeHtml(item.content)}</a></p>`;
+            });
+        }
+
+        html += `</div>`;
+        container.innerHTML += html;
+    });
+
+    if(container.innerHTML.trim() === ""){
+        container.innerHTML = `<p class="empty-note">Nothing in this category yet.</p>`;
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Timetable - Self Study</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+/* Match Assignment Tracker Layout Exactly */
+
+.assignment-card {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 40px;
+}
+
+.section-title {
+    margin-bottom: 20px;
+}
+
+.upload-section {
+    margin-bottom: 30px;
+}
+
+.upload-btn {
+    background: #2563eb;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.upload-btn:hover {
+    background: #1d4ed8;
+}
+
+.edit-btn {
+    background: #6b7280;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.edit-btn:hover {
+    background: #4b5563;
+}
+
+.image-container {
+    margin-top: 20px;
+    background: rgba(255,255,255,0.04);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.image-container img {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+.placeholder-text {
+    opacity: 0.6;
+}
+
+.delete-btn {
+    margin-top: 15px;
+    background: #dc2626;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #b91c1c;
+}
+
+.add-timing-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.add-timing-row select,
+.add-timing-row input[type="time"] {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+.timing-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.timing-table th, .timing-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.timing-table th {
+    opacity: 0.7;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.timing-table input[type="time"] {
+    padding: 6px;
+    border-radius: 6px;
+    border: none;
+}
+
+.row-btn {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 6px;
+}
+
+.save-row-btn { background: #22c55e; }
+.save-row-btn:hover { background: #16a34a; }
+
+.edit-row-btn { background: #2563eb; }
+.edit-row-btn:hover { background: #1d4ed8; }
+
+.delete-row-btn { background: #dc2626; }
+.delete-row-btn:hover { background: #b91c1c; }
+
+</style>
+<script src="config.js"></script>
+</head>
+
+<body onload="loadTimetable()">
+
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+</script>
+<div class="sidebar">
+    <div>
+
+        <div class="sidebar-header">
+            <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+            <h2>HOME</h2>
+        </div>
+
+        <ul>
+            <li onclick="location.href='materials.html'">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+            <li onclick="location.href='summariser.html'">AI Summariser</li>
+            <li onclick="location.href='smartquiz.html'">AI Smart Quiz</li>
+            <li class="active">Timetable</li>
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li onclick="location.href='grades.html'">Grades</li>
+            <li onclick="location.href='progress.html'">Progress Tracker</li>
+        </ul>
+
+    </div>
+
+    <div class="logout" onclick="logout()">Logout</div>
+</div>
+
+<div class="main">
+
+<div class="header">
+    <div style="display:flex;align-items:center;">
+        <img src="logo.jpeg" class="logo">
+        <h1>Self Study</h1>
+    </div>
+</div>
+
+<div class="assignment-card">
+
+<h2 class="section-title">My Timetable</h2>
+
+<div class="upload-section" id="uploadSection">
+    <input type="file" id="timetableInput" accept="image/*">
+    <button class="upload-btn" onclick="uploadTimetable()">Upload Timetable</button>
+</div>
+
+<div id="imageContainer" class="image-container">
+    <p class="placeholder-text">No timetable uploaded yet.</p>
+</div>
+
+<div id="timingsSection" style="display:none;">
+    <h3 class="section-title" style="margin-top:30px;">Day End Times</h3>
+
+    <table class="timing-table" id="timingsTable">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>End Time</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="timingsBody"></tbody>
+    </table>
+
+    <div class="add-timing-row">
+        <select id="daySelect">
+            <option>Monday</option>
+            <option>Tuesday</option>
+            <option>Wednesday</option>
+            <option>Thursday</option>
+            <option>Friday</option>
+            <option>Saturday</option>
+            <option>Sunday</option>
+        </select>
+        <input type="time" id="endTimeInput">
+        <button class="upload-btn" onclick="saveDayTiming()">Save Day Timing</button>
+    </div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const userId = sessionStorage.getItem("userId");
+let savedDays = []; // cache of the day-timing rows currently shown
+
+/* ================= LOAD ================= */
+
+async function loadTimetable(){
+
+    try {
+        const res = await fetch(`${API_BASE}/api/timetable/${userId}`);
+        const data = await res.json();
+
+        // data = { image: {...} | null, days: [ {...}, ... ] }
+
+        if (data.image && data.image.image) {
+            showEditableImage(data.image.image);
+        } else {
+            document.getElementById("imageContainer").innerHTML =
+                '<p class="placeholder-text">No timetable uploaded yet.</p>';
+            document.getElementById("uploadSection").style.display = "block";
+        }
+
+        savedDays = data.days || [];
+        renderTimingsTable();
+
+        // Only show the "add day timing" panel once a timetable photo exists
+        document.getElementById("timingsSection").style.display =
+            (data.image && data.image.image) ? "block" : "none";
+
+    } catch (err) {
+        console.error("Failed to load timetable:", err);
+    }
+}
+
+/* ================= IMAGE UPLOAD / EDIT ================= */
+
+async function uploadTimetable(){
+
+    const file = document.getElementById("timetableInput").files[0];
+    if(!file){
+        alert("Please select an image.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e){
+
+        await fetch(`${API_BASE}/api/timetable/upload`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                userId,
+                image: e.target.result
+            })
+        });
+
+        showEditableImage(e.target.result);
+        document.getElementById("timingsSection").style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
+}
+
+function showEditableImage(imageData){
+    document.getElementById("imageContainer").innerHTML = `
+        <img src="${imageData}">
+        <br>
+        <button class="edit-btn" onclick="showUploadForEdit()">Edit Photo</button>
+        <button class="delete-btn" onclick="deleteTimetable()">Delete Timetable</button>
+    `;
+    // Photo is already saved, so hide the standalone upload box until "Edit" is clicked
+    document.getElementById("uploadSection").style.display = "none";
+}
+
+function showUploadForEdit(){
+    document.getElementById("uploadSection").style.display = "block";
+}
+
+/* ================= DAY END TIMES ================= */
+
+async function saveDayTiming(){
+
+    const day = document.getElementById("daySelect").value;
+    const endTime = document.getElementById("endTimeInput").value;
+
+    if(!endTime){
+        alert("Please select end time.");
+        return;
+    }
+
+    await fetch(`${API_BASE}/api/timetable/day`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, day, endTime, email: sessionStorage.getItem("email") })
+    });
+
+    document.getElementById("endTimeInput").value = "";
+    await loadTimetable();
+}
+
+function renderTimingsTable(){
+
+    const body = document.getElementById("timingsBody");
+    body.innerHTML = "";
+
+    if(savedDays.length === 0){
+        body.innerHTML = '<tr><td colspan="3" class="placeholder-text">No day timings added yet.</td></tr>';
+        return;
+    }
+
+    savedDays.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.id = `day-row-${row.id}`;
+        tr.innerHTML = `
+            <td>${row.day}</td>
+            <td>
+                <span class="view-time">${row.end_time}</span>
+                <input type="time" class="edit-time" value="${row.end_time}" style="display:none;">
+            </td>
+            <td>
+                <button class="row-btn edit-row-btn" onclick="toggleEditRow(${row.id})">Edit</button>
+                <button class="row-btn save-row-btn" style="display:none;" onclick="saveEditedRow(${row.id}, '${row.day}')">Save</button>
+                <button class="row-btn delete-row-btn" onclick="deleteDayTiming(${row.id})">Delete</button>
+            </td>
+        `;
+        body.appendChild(tr);
+    });
+}
+
+function toggleEditRow(id){
+    const row = document.getElementById(`day-row-${id}`);
+    row.querySelector(".view-time").style.display = "none";
+    row.querySelector(".edit-time").style.display = "inline-block";
+    row.querySelector(".edit-row-btn").style.display = "none";
+    row.querySelector(".save-row-btn").style.display = "inline-block";
+}
+
+async function saveEditedRow(id, day){
+    const row = document.getElementById(`day-row-${id}`);
+    const newTime = row.querySelector(".edit-time").value;
+
+    if(!newTime){
+        alert("Please choose a valid time.");
+        return;
+    }
+
+    // The backend upserts on (userId, day), so re-saving the same day updates it in place
+    await fetch(`${API_BASE}/api/timetable/day`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, day, endTime: newTime, email: sessionStorage.getItem("email") })
+    });
+
+    await loadTimetable();
+}
+
+async function deleteDayTiming(id){
+    if(!confirm("Delete this day's end time?")) return;
+
+    await fetch(`${API_BASE}/api/timetable/day/${id}`, { method: "DELETE" });
+    await loadTimetable();
+}
+
+/* ================= DELETE PHOTO ================= */
+
+async function deleteTimetable(){
+
+    if(!confirm("Delete your timetable photo? Your saved day timings will stay.")) return;
+
+    await fetch(`${API_BASE}/api/timetable/${userId}`, {
+        method: "DELETE"
+    });
+
+    location.reload();
+}
+
+/* ================= NAV ================= */
+
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href="login.html";
+}
+
+function goDashboard(){
+    window.location.href = "index.html";
+}
+
+</script>
+
+
+</body>
+</html>

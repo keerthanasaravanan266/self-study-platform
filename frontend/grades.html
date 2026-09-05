@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Grades - Self Study</title>
+<link rel="stylesheet" href="style.css">
+<style>
+
+/* Page specific styling */
+
+.card-container {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 40px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.form-grid input,
+.form-grid select {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+.add-grade-btn {
+    background: #2563eb;
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    color: white;
+}
+
+.add-grade-btn:hover {
+    background: #1d4ed8;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #2563eb;
+}
+
+tr:nth-child(even) {
+    background: rgba(255,255,255,0.07);
+}
+
+.exam-section {
+    margin-top: 40px;
+}
+
+.add-row-btn {
+    margin-top: 10px;
+    background: #22c55e;
+}
+
+</style>
+<script src="config.js"></script>
+</head>
+
+<body onload="renderTables()">
+
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="sidebar">
+    <div>
+        <div class="sidebar-header">
+    <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+    <h2>HOME</h2>
+</div>
+
+        <ul>
+            <li onclick="location.href='materials.html'">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+<li onclick="location.href='summariser.html'">AI Summariser</li>
+<li onclick="location.href='smartquiz.html'">AI Smart Quiz</li>
+<li onclick="location.href='timetable.html'">Timetable</li>
+
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li class="active">Grades</li>
+            <li onclick="location.href='progress.html'">Progress Tracker</li>
+        </ul>
+    </div>
+<div class="logout" onclick="logout()">Logout</div>
+
+</div>
+
+<div class="main">
+
+    <div class="header">
+        <div style="display:flex;align-items:center;">
+            <img src="logo.jpeg">
+            <h1>Self Study</h1>
+        </div>
+    </div>
+
+    <div class="card-container">
+
+        <h2>Grades Management</h2>
+
+        <div class="form-grid">
+            <input type="text" id="subject" placeholder="Subject Name">
+
+            <select id="slot">
+                <option value="">Slot</option>
+                <option>A</option><option>B</option><option>C</option>
+                <option>D</option><option>E</option><option>F</option><option>G</option>
+            </select>
+
+            <select id="exam">
+                <option value="">Examination</option>
+                <option>CAT1</option>
+                <option>CAT2</option>
+                <option>FAT</option>
+            </select>
+
+            <input type="number" id="total" placeholder="Total Marks">
+            <input type="number" id="obtained" placeholder="Marks Obtained">
+            <input type="number" id="average" placeholder="Class Average">
+        </div>
+
+        <button class="add-grade-btn" onclick="addGrade()">Add Grade</button>
+
+        <!-- CAT1 -->
+        <div class="exam-section">
+            <h3>CAT1</h3>
+            <table id="CAT1">
+                <thead>
+                    <tr>
+                        <th>S No.</th>
+                        <th>Subject</th>
+                        <th>Slot</th>
+                        <th>Examination</th>
+                        <th>Total Marks</th>
+                        <th>Marks Obtained</th>
+                        <th>Class Average</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- CAT2 -->
+        <div class="exam-section">
+            <h3>CAT2</h3>
+            <table id="CAT2">
+                <thead>
+                    <tr>
+                        <th>S No.</th>
+                        <th>Subject</th>
+                        <th>Slot</th>
+                        <th>Examination</th>
+                        <th>Total Marks</th>
+                        <th>Marks Obtained</th>
+                        <th>Class Average</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- FAT -->
+        <div class="exam-section">
+            <h3>FAT</h3>
+            <table id="FAT">
+                <thead>
+                    <tr>
+                        <th>S No.</th>
+                        <th>Subject</th>
+                        <th>Slot</th>
+                        <th>Examination</th>
+                        <th>Total Marks</th>
+                        <th>Marks Obtained</th>
+                        <th>Class Average</th>
+			<th>Action</th>
+
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+
+function addGrade() {
+
+    const subject = document.getElementById("subject").value.trim();
+    const slot = document.getElementById("slot").value;
+    const exam = document.getElementById("exam").value;
+    const total = document.getElementById("total").value;
+    const obtained = document.getElementById("obtained").value;
+    const average = document.getElementById("average").value;
+
+    if (!subject || !slot || !exam || !total || !obtained || !average) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    fetch(`${API_BASE}/api/grades`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId: sessionStorage.getItem("userId"),
+            subject,
+            slot,
+            exam,
+            total,
+            obtained,
+            average
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.querySelectorAll("input").forEach(i => i.value = "");
+        document.getElementById("slot").value = "";
+        document.getElementById("exam").value = "";
+        renderTables();
+    });
+}
+
+function renderTables() {
+
+    fetch(`${API_BASE}/api/grades/${sessionStorage.getItem("userId")}`)
+    .then(res => res.json())
+    .then(grades => {
+
+        ["CAT1","CAT2","FAT"].forEach(type => {
+
+            const tbody = document.querySelector(`#${type} tbody`);
+            tbody.innerHTML = "";
+
+            const filtered = grades
+                .filter(g => g.exam === type)
+                .sort((a,b) => a.slot.localeCompare(b.slot));
+
+            filtered.forEach((g, index) => {
+
+                tbody.innerHTML += `
+<tr>
+    <td>${index+1}</td>
+    <td>${g.subject}</td>
+    <td>${g.slot}</td>
+    <td>${g.exam}</td>
+    <td>${g.total_marks}</td>
+    <td>${g.marks_obtained}</td>
+    <td>${g.class_average}</td>
+    <td>
+        <button onclick="editGrade(${g.id})">Edit</button>
+    </td>
+</tr>
+`;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="8">No records yet. Add a grade above.</td>
+                </tr>
+                `;
+            }
+
+        });
+    });
+}
+function editGrade(id){
+
+    fetch(`${API_BASE}/api/grades/${sessionStorage.getItem("userId")}`)
+    .then(res => res.json())
+    .then(grades => {
+
+        const g = grades.find(x => x.id === id);
+
+        const newSubject = prompt("Edit Subject:", g.subject);
+        const newSlot = prompt("Edit Slot (A-G):", g.slot);
+        const newTotal = prompt("Edit Total Marks:", g.total_marks);
+        const newObtained = prompt("Edit Marks Obtained:", g.marks_obtained);
+        const newAverage = prompt("Edit Class Average:", g.class_average);
+
+        if(newSubject === null) return;
+
+        fetch(`${API_BASE}/api/grades/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                subject: newSubject,
+                slot: newSlot,
+                total: newTotal,
+                obtained: newObtained,
+                average: newAverage
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            renderTables();
+        });
+
+    });
+}
+</script>
+<script>
+function goDashboard(){
+    window.location.href = "index.html";
+}
+</script>
+<script>
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href = "login.html";
+}
+</script>
+
+</body>
+</html>
+

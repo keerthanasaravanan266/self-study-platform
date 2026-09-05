@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI Summariser - Self Study</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+
+/* Page Card */
+.page-card {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 40px;
+}
+
+/* Top Controls */
+.controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.controls select {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+/* Text Area */
+textarea {
+    width: 100%;
+    height: 180px;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    resize: none;
+    margin-top: 10px;
+}
+
+/* Buttons */
+.primary-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+}
+
+.primary-btn:hover {
+    background: #1d4ed8;
+}
+
+.secondary-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: #6b7280;
+    color: white;
+    cursor: pointer;
+}
+
+.secondary-btn:hover {
+    background: #4b5563;
+}
+
+.result-box {
+    margin-top: 25px;
+    background: rgba(255,255,255,0.07);
+    padding: 20px;
+    border-radius: 10px;
+    min-height: 120px;
+    white-space: normal;
+    line-height: 1.5;
+}
+
+.result-box pre.code-block {
+    background: #111827;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
+.result-box code {
+    font-family: "Consolas", "Monaco", monospace;
+}
+
+.result-box ul, .result-box ol {
+    margin: 8px 0 8px 22px;
+}
+
+.loading {
+    display: none;
+    margin-top: 10px;
+    color: #22c55e;
+}
+
+.word-count {
+    margin-top: 8px;
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.action-row {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+</style>
+<script src="config.js"></script>
+</head>
+
+<body>
+
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="sidebar">
+    <div>
+        <div class="sidebar-header">
+            <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+            <h2>HOME</h2>
+        </div>
+
+        <ul>
+            <li onclick="location.href='materials.html'">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+            <li class="active">AI Summariser</li>
+            <li onclick="location.href='smartquiz.html'">AI Smart Quiz</li>
+            <li onclick="location.href='timetable.html'">Timetable</li>
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li onclick="location.href='grades.html'">Grades</li>
+            <li onclick="location.href='progress.html'">Progress Tracker</li>
+        </ul>
+    </div>
+
+    <div class="logout" onclick="logout()">Logout</div>
+</div>
+
+<div class="main">
+
+<div class="header">
+    <div style="display:flex;align-items:center;">
+        <img src="logo.jpeg" class="logo">
+        <h1>Self Study</h1>
+    </div>
+</div>
+
+<div class="page-card">
+
+<h2 class="section-title">AI Text Summariser</h2>
+
+<div class="controls">
+    <select id="length">
+        <option value="short">Short</option>
+        <option value="medium">Medium</option>
+        <option value="long">Detailed</option>
+    </select>
+
+    <select id="tone">
+        <option value="academic">Academic</option>
+        <option value="simple">Simple Language</option>
+        <option value="bullet">Bullet Points</option>
+    </select>
+
+</div>
+
+
+<textarea id="inputText" placeholder="Paste your text here..."></textarea>
+
+<div class="word-count">
+    Word Count: <span id="wordCount">0</span>
+</div>
+
+<div class="action-row">
+    <button class="primary-btn" onclick="generateSummary()">Generate Summary</button>
+    <button class="secondary-btn" onclick="clearText()">Clear</button>
+</div>
+
+<div class="loading" id="loading">Generating summary...</div>
+
+<h3 class="section-title">Summary Output</h3>
+<div class="result-box" id="outputText"></div><div class="action-row">
+    <button class="primary-btn" onclick="copySummary()">Copy</button>
+    <button class="secondary-btn" onclick="downloadSummary()">Download</button>
+</div>
+
+</div>
+
+</div>
+
+<script src="markdown.js"></script>
+<script>
+
+let uploadedFile = null; // set when the user picks a pdf/pptx/docx (sent to the server instead of read as plain text)
+let lastSummaryText = ""; // raw text of the last summary, kept for Copy/Download
+
+/* Word Counter */
+document.getElementById("inputText").addEventListener("input", function(){
+    uploadedFile = null; // typing manually overrides any picked file
+    const words = this.value.trim().split(/\s+/).filter(Boolean);
+    document.getElementById("wordCount").textContent = words.length;
+});
+
+/* File Upload */
+document.getElementById("fileUpload").addEventListener("change", function(){
+    const file = this.files[0];
+    if(!file) return;
+
+    const ext = file.name.split(".").pop().toLowerCase();
+
+    if(ext === "txt" || ext === "md"){
+        uploadedFile = null;
+        const reader = new FileReader();
+        reader.onload = function(e){
+            document.getElementById("inputText").value = e.target.result;
+            const words = e.target.result.trim().split(/\s+/).filter(Boolean);
+            document.getElementById("wordCount").textContent = words.length;
+        };
+        reader.readAsText(file);
+    } else {
+        // pdf / pptx / docx - text gets extracted server-side, so just remember
+        // the file and clear the textarea to avoid confusion.
+        uploadedFile = file;
+        document.getElementById("inputText").value = "";
+        document.getElementById("wordCount").textContent = `(will extract text from ${file.name})`;
+    }
+});
+
+function generateSummary(){
+
+    const text = document.getElementById("inputText").value.trim();
+    const length = document.getElementById("length").value;
+    const tone = document.getElementById("tone").value;
+
+    if(!text && !uploadedFile){
+        alert("Please enter text or upload a file to summarise.");
+        return;
+    }
+
+    document.getElementById("loading").style.display="block";
+    document.getElementById("outputText").innerHTML = "";
+
+    const request = uploadedFile
+        ? (() => {
+            const formData = new FormData();
+            formData.append("file", uploadedFile);
+            formData.append("length", length);
+            formData.append("tone", tone);
+            return fetch(`${API_BASE}/api/summarize/file`, { method: "POST", body: formData });
+        })()
+        : fetch(`${API_BASE}/api/summarize`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, length, tone })
+        });
+
+    request
+    .then(res => res.json())
+    .then(data => {
+        lastSummaryText = data.summary || "";
+        renderMarkdownInto("outputText", lastSummaryText);
+        document.getElementById("loading").style.display="none";
+    })
+    .catch(err => {
+        console.error(err);
+        document.getElementById("outputText").textContent = "Error generating summary.";
+        document.getElementById("loading").style.display="none";
+    });
+}
+
+/* Copy */
+function copySummary(){
+    navigator.clipboard.writeText(lastSummaryText);
+    alert("Summary copied!");
+}
+
+/* Download */
+function downloadSummary(){
+    const blob = new Blob([lastSummaryText], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "summary.txt";
+    link.click();
+}
+
+function clearText(){
+    document.getElementById("inputText").value="";
+    document.getElementById("outputText").innerHTML="";
+    document.getElementById("wordCount").textContent="0";
+    document.getElementById("fileUpload").value="";
+    uploadedFile = null;
+    lastSummaryText = "";
+}
+
+function goDashboard(){
+    window.location.href="index.html";
+}
+
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href="login.html";
+}
+
+</script>
+
+</body>
+</html>
+

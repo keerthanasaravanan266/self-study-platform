@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Self Study</title>
+    <link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+
+</script>
+
+<div class="sidebar">
+    <div>
+        <div class="sidebar-header">
+    <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+    <h2>HOME</h2>
+</div>
+
+        <ul>
+            <li onclick="location.href='materials.html'">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+<li onclick="location.href='summariser.html'">AI Summariser</li>
+<li onclick="location.href='smartquiz.html'">AI Smart Quiz</li>
+<li onclick="location.href='timetable.html'">Timetable</li>
+
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li onclick="location.href='grades.html'">Grades</li>
+            <li onclick="location.href='progress.html'">Progress Tracker</li>
+        </ul>
+    </div>
+<div class="logout" onclick="logout()">Logout</div>
+
+</div>
+
+<div class="main">
+
+    <div class="header">
+        <div style="display:flex;align-items:center;">
+            <img src="logo.jpeg">
+            <h1>Self Study</h1>
+        </div>
+        <div id="bell" class="notification" onclick="toggleNotification()">🔔</div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="section-card">
+        <div class="section-title">Upload Files</div>
+
+        <div class="sub" style="margin-bottom:15px;">
+            <h4>Category (e.g. Robotics, Math, OS)</h4>
+            <input type="text" id="uploadCategory" list="categorySuggestions" placeholder="Uncategorized">
+            <datalist id="categorySuggestions"></datalist>
+        </div>
+
+        <div class="sub-sections">
+            <div class="sub">
+                <h4>Document (ppt, pdf, doc ,csv)</h4>
+                <input type="file" id="doc">
+                <button onclick="uploadMaterial('doc','Document')">Upload</button>
+            </div>
+
+            <div class="sub">
+                <h4>Links (YouTube)</h4>
+                <input type="text" id="yt" placeholder="Paste YouTube link">
+                <button onclick="uploadMaterial('yt','Link')">Upload</button>
+            </div>
+
+            <div class="sub">
+               <h4>Audio/Video (mp3, mp4)</h4>
+               <input type="file" id="media">
+               <button onclick="uploadMaterial('media','Media')">Upload</button>
+            </div>
+        </div>
+        <div id="confirm" class="confirm"></div>
+    </div>
+
+    <!-- PASTE -->
+    <div class="section-card">
+        <div class="section-title">Paste</div>
+
+        <div class="sub" style="margin-bottom:15px;">
+            <h4>Category (e.g. Robotics, Math, OS)</h4>
+            <input type="text" id="pasteCategory" list="categorySuggestions" placeholder="Uncategorized">
+        </div>
+
+        <div class="sub-sections">
+            <div class="sub">
+                <h4>Text</h4>
+                <textarea id="text"></textarea>
+                <button onclick="pasteMaterial('text','Text')">Save</button>
+            </div>
+            <div class="sub">
+                <h4>Websites</h4>
+                <input type="text" id="website">
+                <button onclick="pasteMaterial('website','Website')">Save</button>
+            </div>
+            <div class="sub">
+                <h4>Links</h4>
+                <input type="text" id="plink">
+                <button onclick="pasteMaterial('plink','Link')">Save</button>
+            </div>
+        </div>
+        <div id="confirm2" class="confirm"></div>
+    </div>
+
+    <!-- FAQ & HELP -->
+    <div class="footer">
+        <h3>FAQ</h3>
+        <p>Q: What is Self Study?<br>
+        A: Self Study is an AI-powered learning assistant platform.</p>
+
+        <p>Q: Where are my uploaded files stored?<br>
+        A: They are saved securely in your Materials section.</p>
+
+        <h3>Help Center</h3>
+        <p>Email: support@selfstudy.ai</p>
+        <p>Response Time: Within 24 hours</p>
+        <p>Version: 1.0</p>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+<script>
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href = "login.html";
+}
+
+function goDashboard(){
+    window.location.href = "index.html";
+}
+
+// Populate the category suggestions datalist so it's easy to reuse a
+// category you've used before instead of retyping it every time.
+function loadCategorySuggestions(){
+    const userId = sessionStorage.getItem("userId");
+    if(!userId) return;
+
+    fetch(`${API_BASE}/api/materials/categories/${userId}`)
+    .then(res => res.json())
+    .then(categories => {
+        const datalist = document.getElementById("categorySuggestions");
+        if(!datalist) return;
+        datalist.innerHTML = "";
+        [...new Set(categories)].forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat;
+            datalist.appendChild(option);
+        });
+    })
+    .catch(err => console.error(err));
+}
+
+loadCategorySuggestions();
+</script>
+
+</body>
+</html>

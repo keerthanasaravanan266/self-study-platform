@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Progress Tracker - Self Study</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+.progress-card {
+    background: rgba(255,255,255,0.05);
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 40px;
+}
+
+.section-title {
+    margin-bottom: 20px;
+}
+
+.selector {
+    margin-bottom: 30px;
+}
+
+.selector select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+}
+
+.chart-container {
+    background: rgba(255,255,255,0.04);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 40px;
+}
+
+.stats-box {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.green { color: #22c55e; }
+.red { color: #ef4444; }
+
+.no-data {
+    text-align: center;
+    opacity: 0.7;
+    margin-top: 20px;
+}
+
+</style>
+<script src="config.js"></script>
+</head>
+
+<body onload="initializeProgress()">
+
+<script>
+if(!sessionStorage.getItem("userId")){
+    window.location.href = "login.html";
+}
+</script>
+
+<div class="sidebar">
+    <div>
+        <div class="sidebar-header">
+    <div class="dashboard-btn" onclick="goDashboard()">☰</div>
+    <h2>HOME</h2>
+</div>
+
+        <ul>
+            <li onclick="location.href='materials.html'">Materials</li>
+            <li onclick="location.href='chatbot.html'">AI Chatbot</li>
+            <li onclick="location.href='summariser.html'">AI Summariser</li>
+            <li onclick="location.href='smartquiz.html'">AI Smart Quiz</li>
+            <li onclick="location.href='timetable.html'">Timetable</li>
+            <li onclick="location.href='assignments.html'">Assignment Tracker</li>
+            <li onclick="location.href='grades.html'">Grades</li>
+            <li class="active">Progress Tracker</li>
+        </ul>
+    </div>
+    <div class="logout" onclick="logout()">Logout</div>
+</div>
+
+<div class="main">
+
+<div class="header">
+    <div style="display:flex;align-items:center;">
+        <img src=";ogo.jpeg" class="logo">
+        <h1>Self Study</h1>
+    </div>
+</div>
+
+<div class="progress-card">
+
+<h2 class="section-title">Subject Progress Analytics</h2>
+
+<div class="selector">
+    <label>Select Subject: </label>
+    <select id="subjectSelect" onchange="updateChart()"></select>
+</div>
+
+<div class="chart-container">
+    <canvas id="progressChart"></canvas>
+</div>
+
+<div class="stats-box">
+    <div class="stat">
+        <h3>Trend</h3>
+        <p id="trendText">-</p>
+    </div>
+    <div class="stat">
+        <h3>Average Performance</h3>
+        <p id="studentAvg">-</p>
+    </div>
+    <div class="stat">
+        <h3>Compared to Class</h3>
+        <p id="comparison">-</p>
+    </div>
+</div>
+
+<div id="noDataMessage" class="no-data" style="display:none;">
+    No grade data available.
+</div>
+
+</div>
+</div>
+
+<script>
+
+let grades = [];
+let chart;
+
+function initializeProgress(){
+
+    fetch(`${API_BASE}/api/grades/${sessionStorage.getItem("userId")}`)
+    .then(res => res.json())
+    .then(data => {
+
+        grades = data;
+
+        if(grades.length === 0){
+            document.getElementById("noDataMessage").style.display="block";
+            return;
+        }
+
+        const subjects = [...new Set(grades.map(g => g.subject))];
+
+        const select = document.getElementById("subjectSelect");
+        select.innerHTML = "";
+
+        subjects.forEach(subject => {
+            const option = document.createElement("option");
+            option.value = subject;
+            option.textContent = subject;
+            select.appendChild(option);
+        });
+
+        createChart();
+        updateChart();
+    });
+}
+
+function createChart(){
+
+    const ctx = document.getElementById("progressChart").getContext("2d");
+
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: ["CAT1", "CAT2", "FAT"],
+            datasets: [
+                {
+                    label: "Student Performance (%)",
+                    borderColor: "#3b82f6",
+                    backgroundColor: "#3b82f6",
+                    tension: 0.3,
+                    fill: false,
+                    data: []
+                },
+                {
+                    label: "Class Average (%)",
+                    borderColor: "#ef4444",
+                    backgroundColor: "#ef4444",
+                    tension: 0.3,
+                    fill: false,
+                    data: []
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { labels: { color: "white" } }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "white" }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { color: "white" }
+                }
+            }
+        }
+    });
+}
+
+function updateChart(){
+
+    const subject = document.getElementById("subjectSelect").value;
+    const exams = ["CAT1","CAT2","FAT"];
+
+    let studentData = [];
+    let classData = [];
+
+    exams.forEach(exam => {
+
+        const record = grades.find(g =>
+            g.subject === subject && g.exam === exam
+        );
+
+        if(record){
+
+            const studentPercent =
+                (record.marks_obtained / record.total_marks) * 100;
+
+            const classPercent =
+                (record.class_average / record.total_marks) * 100;
+
+            studentData.push(studentPercent.toFixed(2));
+            classData.push(classPercent.toFixed(2));
+
+        } else {
+            studentData.push(null);
+            classData.push(null);
+        }
+    });
+
+    chart.data.datasets[0].data = studentData;
+    chart.data.datasets[1].data = classData;
+    chart.update();
+
+    updateStats(studentData, classData);
+}
+
+function updateStats(studentData, classData){
+
+    const validData = studentData.filter(x => x !== null).map(Number);
+
+    if(validData.length === 0) return;
+
+    const avg = (validData.reduce((a,b)=>a+b,0) / validData.length).toFixed(2);
+    document.getElementById("studentAvg").textContent = avg + "%";
+
+    let trend = "Stable";
+    if(validData.length >= 2){
+        if(validData[validData.length-1] > validData[0]){
+            trend = "Improving 📈";
+        } else if(validData[validData.length-1] < validData[0]){
+            trend = "Declining 📉";
+        }
+    }
+
+    document.getElementById("trendText").textContent = trend;
+
+    const classValid = classData.filter(x=>x!==null).map(Number);
+    const classAvg = (classValid.reduce((a,b)=>a+b,0)/classValid.length).toFixed(2);
+
+    if(avg > classAvg){
+        document.getElementById("comparison").innerHTML =
+            `<span class="green">Above Class Average</span>`;
+    } else if(avg < classAvg){
+        document.getElementById("comparison").innerHTML =
+            `<span class="red">Below Class Average</span>`;
+    } else {
+        document.getElementById("comparison").textContent =
+            "Equal to Class Average";
+    }
+}
+
+function logout(){
+    sessionStorage.removeItem("userId");
+    window.location.href="login.html";
+}
+function goDashboard(){
+    window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>
+
