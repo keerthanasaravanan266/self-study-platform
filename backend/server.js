@@ -783,7 +783,7 @@ app.put("/api/grades/:id", (req, res) => {
 app.use("/api/auth", require("./routes/auth"));
 
 
-cron.schedule("* * * * *", () => {
+cron.schedule("0 9 * * *", () => {
 
     const now = new Date();
     const currentTime =
